@@ -1,5 +1,7 @@
 # ActivityBot - A Simple ActivityPub Bot Server in a Single PHP File
 
+Forked from Terence Eden at https://gitlab.com/edent/activity-bot
+
 This is a single PHP file - and an `.htaccess file` - which acts as an extremely basic ActivityPub server for running automated accounts.
 
 This bot can do the following:
