@@ -36,7 +36,7 @@ That's it! Here's what it *doesn't* do:
 ## Details on changes from forked version
 ### Bridge to BlueSky
 Handling multiple accounts on the same host via .well-known/atproto-did is not a good idea and requires changes to your server config anyway. Therefore a DNS approach is better. Bluesky offers a [guide](https://bsky.social/about/blog/4-28-2023-domain-handle-tutorial). Just add a DNS entry like *_atproto.username.subdomain TXT     
- "did=did:plc:your-did-number"* for each username and your done. After you follow *@bsky.brid.gy@bsky.brid.gy* wait a day and then DM them with *"content=username {username}.{dimain}"* can get the DID number from *https://fed.brid.gy/ap/@username@domain*. You can debug the result on [this page](https://bsky-debug.app/handle).
+ "did=did:plc:your-did-number"* for each username and your done. After you follow *@bsky.brid.gy@bsky.brid.gy* wait a day and then DM them with *"content=username {username}.{dimain}"* can get the DID number from *https://fed.brid.gy/ap/@username@domain*. Example below. You can debug the result on [this page](https://bsky-debug.app/handle).
 
 ### Multiple accounts
 The big change from the original is to add support for multiple accounts. This is done by adding all actions, inboxes, etc. to the server/@username path. Also webfinger takes into account the username being searched for. All this is done by having separate folder with the usename under the "u" subfolder. Details how to set this up are listed below.
@@ -78,10 +78,16 @@ r = requests.post("https://test.example.com/@UserName/action/send", data=data, f
 
 ### Follow an account
 
-1. To post a message:
+1. To send a Follow message:
 ```python
 import requests
 data = { "password": "your-password-here", "action": "Follow", "user": "@name@example.com" }
+r = requests.post("https://test.example.com/@UserName/action/users", data=data)
+```
+1. To create a bridge to Bluesky:
+```python
+import requests
+data = { "password": "your-password-here", "action": "Follow", "user": "@bsky.brid.gy@bsky.brid.gy" }
 r = requests.post("https://test.example.com/@UserName/action/users", data=data)
 ```
 
@@ -93,6 +99,13 @@ import requests
 data = { "password": "your-password-here", "content": "Shhh!", "DM": "@user@whatever.tld" }
 r = requests.post("https://test.example.com/@UserName/action/send", data=data)
 ```
+1. Send a message to Bluesky bridge to change username:
+```python
+import requests
+data = { "password": "your-password-here", "content": "username UserName.test.example.com", "DM": "@bsky.brid.gy@bsky.brid.gy"" }
+r = requests.post("https://test.example.com/@UserName/action/send", data=data)
+```
+
 
 
 ## How this works
