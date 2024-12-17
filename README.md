@@ -84,7 +84,7 @@ import requests
 data = { "password": "your-password-here", "action": "Follow", "user": "@name@example.com" }
 r = requests.post("https://test.example.com/@UserName/action/users", data=data)
 ```
-1. To create a bridge to Bluesky:
+2. To create a bridge to Bluesky:
 ```python
 import requests
 data = { "password": "your-password-here", "action": "Follow", "user": "@bsky.brid.gy@bsky.brid.gy" }
@@ -99,7 +99,7 @@ import requests
 data = { "password": "your-password-here", "content": "Shhh!", "DM": "@user@whatever.tld" }
 r = requests.post("https://test.example.com/@UserName/action/send", data=data)
 ```
-1. Send a message to Bluesky bridge to change username:
+2. Send a message to Bluesky bridge to change username:
 ```python
 import requests
 data = { "password": "your-password-here", "content": "username UserName.test.example.com", "DM": "@bsky.brid.gy@bsky.brid.gy"" }
