@@ -14,14 +14,15 @@ This bot can do the following:
 * 🖼️ Attach an image & alt text to a message
 * 🕸️ Autolink URls, hashtags, and @ mentions
 * 👈 Follow, Unfollow, Block, and Unblock other accounts
-* 🦋 Bridge to BlueSky with your domain name via Bridgy Fed
+* 🦋 ~~Bridge to BlueSky with your domain name via Bridgy Fed~~
 * 🚚 Move followers from an old account
 * 🔏 Verify cryptographic signatures
 * 🪵 Log sent messages and errors
+* Receive messages (other than follows and unfollows)
+* Receive likes and shares
 
 That's it! Here's what it *doesn't* do:
 
-* ❌ Receive messages (other than follows and unfollows)
 * ❌ Thread replies
 * ❌ Delete or update posts
 * ❌ Create Polls
@@ -31,6 +32,14 @@ That's it! Here's what it *doesn't* do:
 * ❌ Set "Content Warning"
 * ❌ Accurate support for converting user's text to HTML
 * ❌ Cannot be discovered by Lemmy instances
+
+## Details on changes from forked version
+### Bridge to BlueSky
+Handling multiple accounts on the same host via .well-known/atproto-did is not a good idea and requires changes to your server config anyway. Therefore a DNS approach is better. Bluesky offers a [guide](https://bsky.social/about/blog/4-28-2023-domain-handle-tutorial). Just add a DNS entry like *_atproto.username.subdomain TXT     
+ "did=did:plc:your-did-number"* for each username and your done. After you follow *@bsky.brid.gy@bsky.brid.gy* wait a day and then DM them with *"content=username {username}.{dimain}"* can get the DID number from *https://fed.brid.gy/ap/@username@domain*. You can debug the result on [this page](https://bsky-debug.app/handle).
+
+### Multiple accounts
+The big change from the original is that this one s
 
 ## Getting started
 
