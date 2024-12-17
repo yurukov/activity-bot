@@ -598,7 +598,7 @@
       undo( $inbox_message ); 
     } else if ("Create" == $inbox_type) {
       if ( !verifyHTTPSignature() ) die();
-        header("HTTP\/1.1 202 Accepted");
+      header("HTTP\/1.1 202 Accepted");
     } else {
       die();
     }
@@ -608,8 +608,6 @@
     $inbox_filename = $uuid . "." . urlencode( $inbox_type ) . ".json";
     file_put_contents( $directories["inbox"] . "/{$inbox_filename}", json_encode( $inbox_message ) );
 
-    exec("rm -rf {$userfolder}/{$username}/.index*html.gz");
-    
     die();
   }
 
@@ -784,13 +782,10 @@ XML;
 
     if ($style=="home") {
       $message_files = glob( "{$userfolder}/*/posts/*.json");
-      $indexFileName = ".index.html.gz";
     } else if ($style=="userhome") {
       $message_files = glob( $directories["posts"] . "/*.json");
-      $indexFileName = "{$userfolder}/{$username}/.index.html.gz";
     }
 
-    ob_start();
     print_header($style);
     print_sidebar($style);
 
@@ -808,8 +803,6 @@ echo <<< HTML
 HTML;
     print_footer();
 
-    $indexFileContents = ob_get_flush();
-    file_put_contents($indexFileName,gzencode($indexFileContents,9));
     die();
   }
 
@@ -1058,7 +1051,6 @@ HTML;
     $postData = file_get_contents($postPath);
 
     if (isAcceptingHTML()) {
-      ob_start();
       print_header("note");
       print_sidebar("note");
 
@@ -1091,9 +1083,6 @@ echo <<< HTML
 HTML;
 
       print_footer();
-      $indexFileName = "{$userfolder}/{$username}/.index.{$postUUID}.html.gz";
-      $indexFileContents = ob_get_flush();
-      file_put_contents($indexFileName,gzencode($indexFileContents,9));
       die();
     }
 
@@ -1231,11 +1220,6 @@ HTML;
     //  Save the permalink
     $note_json = json_encode( $note );
     file_put_contents( $directories["posts"] . "/{$guid}.json", print_r( $note_json, true ) );
-
-    if (!isset( $_POST["DM"] )) {
-      // clean any cached html files
-      exec("rm -rf .index.html.gz {$userfolder}/{$username}/.index*html.gz");
-    }
 
     //  Send the message either publicly or privately
     if ( $cc == null ) {
