@@ -957,7 +957,9 @@ HTML;
       if ( $message["to"][0] != "https://www.w3.org/ns/activitystreams#Public" )
         continue;
 
-      $published = $message["published"];
+      // Some automated note may have the same publishing times, 
+      // but different write times and definitely different filenames
+      $published = $message["published"].filemtime($message_file).$message_file;
       $messages_ordered[$published] = $message;
     }    
     krsort($messages_ordered);
@@ -982,7 +984,7 @@ HTML;
 
       $id = $message["id"];
       $published = $message["published"];
-      $published = str_replace("T"," ",str_replace("+02:00","",$published));
+      $published = date("Y-m-d H:i:s",strtotime($published));
     
       $likes = isset($message["likes"])?$message["likes"]["totalItems"]:0;
       $shares = isset($message["shares"])?$message["shares"]["totalItems"]:0;
