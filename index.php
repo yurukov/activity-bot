@@ -284,7 +284,7 @@
     }
   
     header( "Content-Type: application/activity+json" );
-    echo json_encode( $user );
+    echo json_encode( $user, JSON_UNESCAPED_UNICODE );
     die();
   }
 
@@ -532,7 +532,7 @@
                          && $action_data["object"]==$inbox_message["object"])
           die();
       }
-      
+    
       $postfile=explode("/",$object);
       $postfile=end($postfile);
       if (strpos($postfile,".json")===false) $postfile="{$postfile}.json";
@@ -561,8 +561,9 @@
       }
       
       $note[$action]["totalItems"]++;
-      $note_json = json_encode( $note );
+      $note_json = json_encode($note, JSON_UNESCAPED_UNICODE);
       file_put_contents( $directories["posts"] . "/{$postfile}", print_r( $note_json, true ) );
+
       header("HTTP\/1.1 202 Accepted");
 
     } else if ("Undo" == $inbox_type) {
@@ -606,7 +607,7 @@
     //  If the message is valid, save the message in `/data/inbox/`
     $uuid = uuid( $inbox_message );
     $inbox_filename = $uuid . "." . urlencode( $inbox_type ) . ".json";
-    file_put_contents( $directories["inbox"] . "/{$inbox_filename}", json_encode( $inbox_message ) );
+    file_put_contents( $directories["inbox"] . "/{$inbox_filename}", json_encode($inbox_message, JSON_UNESCAPED_UNICODE) );
 
     die();
   }
@@ -655,7 +656,7 @@
     $signer = openssl_get_privatekey( $key_private );
 
     //  Timestamp this message was sent
-    $date   = date( "D, d M Y H:i:s \G\M\T" );
+    $date = gmdate( "D, d M Y H:i:s \G\M\T" );
 
     //  There are subtly different signing requirements for POST and GET.
     if ( "POST" == $method ) {
@@ -875,12 +876,14 @@ HTML;
       $following_files = glob( $directories["following"] . "/*.json" );
       $totalFollowing  = count( $following_files );
       $previousPage = $style=="userhome"?"/":"https://{$server}/@{$username}";
+      //The Bluesky bridge tends to replace underscores with dashes. Doublecheck.
+      $usernameBsky = str_replace("_","-",$username);
 echo <<< HTML
       <div><a href="{$previousPage}">↩</a></div>
       <header>
         <div>
-          <img src="https://{$server}/@{$username}/res/banner.png" alt="@{$username} banner" class="header-banner"/>
-          <img src="https://{$server}/@{$username}/res/icon.png" alt="@{$username} profile pic"/>
+          <img src="https://{$server}/@{$username}/banner.png" alt="@{$username} banner" class="header-banner"/>
+          <img src="https://{$server}/@{$username}/icon.png" alt="@{$username} profile pic"/>
         </div>
         <address>
           <h1>{$realName}</h1>
@@ -888,7 +891,7 @@ echo <<< HTML
             <a rel="author" href="https://{$server}/@{$username}">@{$username}@{$server}</a>
             <br/>
             <a href="https://{$server}/@{$username}" target="_blank" class="button-mastodon">Mastodon</a>
-            <a href="https://bsky.app/profile/{$username}.@{$server}.ap.brid.gy" target="_blank" class="button-bluesky">BlueSky</a>
+            <a href="https://bsky.app/profile/{$usernameBsky}.@{$server}.ap.brid.gy" target="_blank" class="button-bluesky">BlueSky</a>
             <a href="https://twitter.com/{$username}" target="_blank" class="button-twitter">Twitter</a>
           </h2>
           <div id="infobox"><span></span></div>
@@ -962,7 +965,7 @@ HTML;
       $published = $message["published"].filemtime($message_file).$message_file;
       $messages_ordered[$published] = $message;
     }    
-    krsort($messages_ordered);
+    krsort($messages_ordered, SORT_STRING);
     $messages_ordered = array_slice(array_values($messages_ordered), 0, $max); 
 
     if (!$messages_ordered) {
@@ -1065,21 +1068,6 @@ HTML;
 
 echo <<< HTML
       </section>
-
-HTML;
-echo <<< HTML
-      <section id="notes">
-        <h2>Lates notes</h2>
-
-HTML;
-
-    $message_files = glob( $directories["posts"] . "/*.json");
-    $mfpos = array_search($postPath,$message_files);
-    if ($mfpos!==false) $message_files[$mfpos]=null;
-    print_notes($message_files,5);
-
-echo <<< HTML
-      </section>
     </main>
 
 HTML;
@@ -1100,7 +1088,7 @@ HTML;
       echo $postData;
     } else {
       $postData=json_decode($postData,true);
-      echo json_encode($postData[$action]);
+      echo json_encode($postData[$action], JSON_UNESCAPED_UNICODE);
     }
   }
   
@@ -1220,7 +1208,7 @@ HTML;
     
 
     //  Save the permalink
-    $note_json = json_encode( $note );
+    $note_json = json_encode( $note, JSON_UNESCAPED_UNICODE );
     file_put_contents( $directories["posts"] . "/{$guid}.json", print_r( $note_json, true ) );
 
     //  Send the message either publicly or privately
@@ -1258,18 +1246,18 @@ HTML;
     $ch = curl_init( $inbox );
     curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
     curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, "POST" );
-    curl_setopt( $ch, CURLOPT_POSTFIELDS,     json_encode( $message ) );
+    curl_setopt( $ch, CURLOPT_POSTFIELDS,     json_encode( $message, JSON_UNESCAPED_UNICODE ) );
     curl_setopt( $ch, CURLOPT_HTTPHEADER,     $headers );
     curl_setopt( $ch, CURLOPT_USERAGENT,      USERAGENT );
     $response = curl_exec( $ch );
 
     //  Check for errors
     if( curl_errno( $ch ) ) {
-      $error_message = curl_error( $ch ) . "\ninbox: {$inbox}\nmessage: " . json_encode($message);
+      $error_message = curl_error( $ch ) . "\ninbox: {$inbox}\nmessage: " . json_encode($message, JSON_UNESCAPED_UNICODE);
       save_log( "Error", $error_message );
       return false;
     }
-    save_log( "Sent-{$inbox_host}", var_export( $headers, true ) . "\n" . json_encode( $message ) . "\n\n" .   $response );
+    save_log( "Sent-{$inbox_host}", var_export( $headers, true ) . "\n" . json_encode( $message, JSON_UNESCAPED_UNICODE ) . "\n\n" .   $response );
     curl_close( $ch );
     return true;
   }
@@ -1329,14 +1317,14 @@ HTML;
         $headers = generate_signed_headers( $message, $inbox_host, $inbox_path, "POST" );
 
         //  Save a record of what will be sent
-        save_log( "Sent-{$inbox_host}", var_export( $headers, true ) . "\n" . json_encode( $message )  );
+        save_log( "Sent-{$inbox_host}", var_export( $headers, true ) . "\n" . json_encode( $message, JSON_UNESCAPED_UNICODE )  );
         
         //  POST the message and header to the requester's inbox
         $ch = curl_init( $inbox );    
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
         curl_setopt( $ch, CURLOPT_HEADER,         true );  //  See whether the request was successful
         curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, "POST" );
-        curl_setopt( $ch, CURLOPT_POSTFIELDS,     json_encode( $message ) );
+        curl_setopt( $ch, CURLOPT_POSTFIELDS,     json_encode( $message, JSON_UNESCAPED_UNICODE ) );
         curl_setopt( $ch, CURLOPT_HTTPHEADER,     $headers );
         curl_setopt( $ch, CURLOPT_USERAGENT,      USERAGENT );
 
@@ -1559,7 +1547,7 @@ HTML;
 
     //  Render the page
     header( "Content-Type: application/activity+json" );
-    echo json_encode( $outbox );
+    echo json_encode( $outbox, JSON_UNESCAPED_UNICODE );
     die();
   }
 
@@ -1917,12 +1905,12 @@ HTML;
 
           $action="Like" == $inbox_type ? "likes" : "shares";
   
-          if (!property_exists($note,$action)) die();
+          if (!array_key_exists($action,$note)) die();
 
           $note[$action]["totalItems"]--;
           if ($note[$action]["totalItems"]<0) $note[$action]["totalItems"]=0;
 
-          $note_json = json_encode( $note );
+          $note_json = json_encode( $note, JSON_UNESCAPED_UNICODE );
           file_put_contents( $directories["posts"] . "/{$postfile}", print_r( $note_json, true ) );
         }
 
